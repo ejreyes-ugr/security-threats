@@ -1,0 +1,29 @@
+name: Archive Secure Code
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # Paso para verificar la seguridad del código (puedes usar herramientas como CodeQL o dependabot)
+    - name: Run CodeQL analysis
+      uses: github/codeql-action/analyze@v2
+      with:
+        category: "security-extended"
+
+    # Condicional para archivar solo si el análisis de seguridad fue exitoso
+    - name: Create ZIP Archive
+      if: success() # Se archiva solo si los pasos anteriores fueron exitosos
+      uses: actions/archive@v2
+      with:
+        path: ./ # Directorio que será comprimido
+        format: zip
+        name: secure-code.zip
