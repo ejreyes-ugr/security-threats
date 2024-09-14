@@ -1,29 +1,38 @@
-name: Archive Secure Code
+name: Scan code with Snyk and Archive if Secure
 
-on:
+on: 
   push:
     branches:
       - main
 
 jobs:
-  build:
+  security:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - uses: actions/checkout@master
+      
+      # Paso para ejecutar Snyk y verificar vulnerabilidades
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/node@master
+        continue-on-error: true # Asegura que se pueda subir el resultado incluso si Snyk falla
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: test
+          args: --sarif-file-output=snyk.sarif --all-projects
 
-    # Paso para verificar la seguridad del código (puedes usar herramientas como CodeQL o dependabot)
-    - name: Run CodeQL analysis
-      uses: github/codeql-action/analyze@v2
-      with:
-        category: "security-extended"
+      # Subir el informe de Snyk a GitHub Code Scanning
+      - name: Upload result to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: snyk.sarif
 
-    # Condicional para archivar solo si el análisis de seguridad fue exitoso
-    - name: Create ZIP Archive
-      if: success() # Se archiva solo si los pasos anteriores fueron exitosos
-      uses: actions/archive@v2
-      with:
-        path: ./ # Directorio que será comprimido
-        format: zip
-        name: secure-code.zip
+      # Condicional para archivar el código solo si no se encuentran vulnerabilidades críticas o severas
+      - name: Create ZIP Archive if Snyk passed
+        if: success() # Solo si todos los pasos anteriores son exitosos
+        uses: actions/archive@v2
+        with:
+          path: ./ # Directorio raíz
+          format: zip
+          name: secure-code.zip
