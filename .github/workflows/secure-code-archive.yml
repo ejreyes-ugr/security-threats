@@ -29,10 +29,10 @@ jobs:
           sarif_file: snyk.sarif
 
       # Condicional para archivar el código solo si no se encuentran vulnerabilidades críticas o severas
-      - name: Create ZIP Archive if Snyk passed
-        if: success() # Solo si todos los pasos anteriores son exitosos
-        uses: actions/archive@v2
+      - name: Create zip
+        if: success() # Solo si los pasos anteriores fueron exitosos
+        uses: ihiroky/archive-action@v1
         with:
-          path: ./ # Directorio raíz
-          format: zip
-          name: secure-code.zip
+          root_dir: ./ # Este es el directorio raíz 
+          file_path: secure-code.zip # nombre y la ruta del archivo ZIP
+
